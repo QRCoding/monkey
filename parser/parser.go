@@ -7,6 +7,11 @@ import (
 	"github.com/QRCoding/monkey/token"
 )
 
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression
+)
+
 type Parser struct {
 	l *lexer.Lexer
 
@@ -14,6 +19,9 @@ type Parser struct {
 
 	curToken  token.Token
 	peekToken token.Token
+
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -27,6 +35,14 @@ func New(l *lexer.Lexer) *Parser {
 	p.nextToken()
 
 	return p
+}
+
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
 }
 
 func (p *Parser) Errors() []string {
